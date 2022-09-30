@@ -1,213 +1,104 @@
-import { createEffect } from "solid-js";
+import { createSignal, createEffect } from "solid-js";
+import { getData } from "./api/getData";
 import styles from "./App.module.css";
-import data from "./data.json";
 import scoreData from "./data-scores.json";
+import GameList from "./GameList";
 
-const combinedData = data.map( (game) => {
-	const gameScore = scoreData.find( g => g.id === game.id );
-	const homeTeam = game.home_team;
-	const awayTeam = game.away_team;
-	let homeTeamSpread, awayTeamSpread;
-	game.bookmakers.map( book => {
-		if ( book.key === "barstool" ) {
-			const teams = book.markets[ 0 ].outcomes;
-			homeTeamSpread = teams.find( team => team.name === homeTeam ).point;
-			awayTeamSpread = teams.find( team => team.name === awayTeam ).point;
-			console.log( awayTeamSpread, homeTeamSpread );
-		}
-	} );
+function updateCheckboxState( currentWeek ) {
+	const currentData = window.localStorage.getItem( currentWeek );
 
-	if ( gameScore.completed ) {
-		const homeTeamScore = gameScore.scores.find( score => score.name === homeTeam );
-		const awayTeamScore = gameScore.scores.find( score => score.name === awayTeam );
-		return {
-			id: game.id,
-			completed: gameScore.completed,
-			commence_time: gameScore.commence_time,
-			home: {
-				team: homeTeam,
-				score: homeTeamScore.score,
-				spread: homeTeamSpread,
-			},
-			away: {
-				team: awayTeam,
-				score: awayTeamScore.score,
-				spread: awayTeamSpread,
+	if (currentData) {
+		const parsedData = JSON.parse(currentData);
+
+		Object.keys(parsedData).map((id) => {
+			const game = document.getElementById(id);
+			const team = parsedData[id].teamName;
+			const firstLabel = game.querySelectorAll("label")[0];
+			const firstCheckbox = game.querySelectorAll("input")[0];
+			const secondCheckbox = game.querySelectorAll("input")[1];
+			const team1 = firstLabel.innerText.includes(team);
+
+			if (team1) {
+				firstCheckbox.checked = true;
+				secondCheckbox.disabled = true;
+			} else {
+				secondCheckbox.checked = true;
+				firstCheckbox.disabled = true;
 			}
-		}
-	} else {
-		return {
-			id: game.id,
-			completed: gameScore.completed,
-			commence_time: gameScore.commence_time,
-			home: {
-				team: homeTeam,
-				score: null,
-				spread: homeTeamSpread,
-			},
-			away: {
-				team: awayTeam,
-				score: null,
-				spread: awayTeamSpread,
-			}
-		}
+		});
 	}
-} );
+}
 
-console.log( combinedData );
+function updateScoreState( currentWeek, setScore ) {
+	const currentData = window.localStorage.getItem( currentWeek );
+	const score = window.localStorage.getItem( "score" );
 
-/* [ */
-/* 	{ */
-/* 		game_id: "123", */
-/* 		selected_team: "blah", */
-/* 		spread: 0 */
-/* 	} */
-/* ] */
+	let parsedScore;
+	if ( score ) {
+		parsedScore = JSON.parse( score );
+		setScore( parsedScore );
+	}
 
-function App() {
-	createEffect(() => {
-		const currentData = window.localStorage.getItem("week");
+	if ( currentData ) {
+		const parsedData = JSON.parse( currentData );
 
-		if (currentData) {
-			const parsedData = JSON.parse(currentData);
-			Object.keys(parsedData).map((id) => {
-				const game = document.getElementById(id);
-				const team = parsedData[id].name;
-				const firstLabel = game.querySelectorAll("label")[0];
-				const firstCheckbox = game.querySelectorAll("input")[0];
-				const secondCheckbox = game.querySelectorAll("input")[1];
-				const team1 = firstLabel.innerText.includes(team);
-
-				if (team1) {
-					firstCheckbox.checked = true;
-					secondCheckbox.disabled = true;
-				} else {
-					secondCheckbox.checked = true;
-					firstCheckbox.disabled = true;
-				}
-			});
-		}
-	});
-
-	createEffect(() => {
-		const currentData = window.localStorage.getItem( "week" );
-
-		if ( currentData ) {
-			const parsedData = JSON.parse( currentData );
-
-			const scores = scoreData.reduce((acc, curr) => {
-				const foundGame = parsedData[ curr.id ];
-				if ( foundGame && curr.completed ) {
-					const winner = curr.scores[ 0 ].score > curr.scores[ 1 ].score ? {
-							team: curr.scores[ 0 ].name,
-							amount: curr.scores[ 0 ].score - curr.scores[ 1 ].score
-						} : {
-							team: curr.scores[ 1 ].name,
-							amount: curr.scores[ 1 ].score - curr.scores[ 0 ].score
-						}
-
-					if ( winner.team === foundGame.name ) {
-						const diff = winner.amount + foundGame.point;
-
-						diff >= 0 ? acc.jon++ : acc.chuck++;
-
-						console.log( { curr, foundGame, winner } );
-					} else {
-						const diff = winner.amount - foundGame.point;
-
-						diff >= 0 ? acc.chuck++ : acc.jon++;
-
-						console.log( { curr, foundGame, winner } );
+		const scores = scoreData.reduce((acc, curr) => {
+			const foundGame = parsedData[ curr.id ];
+			if ( foundGame && curr.completed ) {
+				const winner = curr.scores[ 0 ].score > curr.scores[ 1 ].score ? {
+						team: curr.scores[ 0 ].name,
+						amount: curr.scores[ 0 ].score - curr.scores[ 1 ].score
+					} : {
+						team: curr.scores[ 1 ].name,
+						amount: curr.scores[ 1 ].score - curr.scores[ 0 ].score
 					}
 
+				if ( winner.team === foundGame.teamName ) {
+					const diff = winner.amount + foundGame.spread;
+
+					diff >= 0 ? acc.jon++ : acc.chuck++;
+				} else {
+					const diff = winner.amount - foundGame.spread;
+
+					diff >= 0 ? acc.chuck++ : acc.jon++;
 				}
 
-				return acc;
+			}
 
-			}, { jon: 0, chuck: 0 } )
+			return acc;
 
-			console.log( scores );
-		}
+		}, { jon: 0, chuck: 0 } )
+
+		setScore( scores );
+		window.localStorage.setItem(
+			"score",
+			JSON.stringify( scores )
+		);
+	}
+}
+
+function App() {
+	const [ score, setScore ] = createSignal( {} );
+	const [ combinedData, setCombinedData ] = createSignal( getData() || [] );
+
+	createEffect(() => {
+		const currentWeek = combinedData()[ 0 ].currentWeek;
+
+		updateCheckboxState(currentWeek);
+		updateScoreState( currentWeek, setScore );
 	});
 
-	const handleChecked = (e, id, name, point) => {
-		const game = document.getElementById(id);
-		const firstCheckbox = game.querySelectorAll("input")[0];
-		const secondCheckbox = game.querySelectorAll("input")[1];
-
-		if (e.target.checked) {
-			const currentData = window.localStorage.getItem("week");
-
-			if (currentData) {
-				const parsedData = JSON.parse(currentData);
-				const data = {
-					...parsedData,
-					[id]: {
-						name,
-						point,
-					},
-				};
-				window.localStorage.setItem("week", JSON.stringify(data));
-			} else {
-				window.localStorage.setItem(
-					"week",
-					JSON.stringify({ [id]: { name, point } })
-				);
-			}
-		}
-
-		if (firstCheckbox.checked) {
-			secondCheckbox.disabled = true;
-		} else {
-			secondCheckbox.disabled = false;
-		}
-
-		if (secondCheckbox.checked) {
-			firstCheckbox.disabled = true;
-		} else {
-			firstCheckbox.disabled = false;
-		}
-	};
-
-	return combinedData.map((game) => {
-		const home = game.home;
-		const away = game.away;
-
-		return (
-			<div key={game.id}>
-				<li id={game.id}>
-					<label>
-						<input
-							type="checkbox"
-							onChange={(e) =>
-								handleChecked(
-									e,
-									game.id,
-									home.team,
-									home.spread
-								)
-							}
-						/>
-						Home: { home.team } {home.spread} { home.score ?? "" }
-					</label>
-					<label>
-						<input
-							type="checkbox"
-							onChange={(e) =>
-								handleChecked(
-									e,
-									game.id,
-									away.team,
-									away.spead
-								)
-							}
-						/>
-						Away: {away.team} {away.spread} { away.score ?? "" }
-					</label>
-				</li>
+	return (
+		<>
+			<h1>Jon and Chuck's Ultimate Pick'em Game</h1>
+			<div>
+				<h2>Scoreboard</h2>
+				<p>Jon: { score().jon }</p>
+				<p>Chuck: { score().chuck }</p>
 			</div>
-		)
-	} )
+			<GameList gameData={ combinedData() } />
+		</>
+	)
 }
 
 export default App;
