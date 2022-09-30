@@ -1,6 +1,5 @@
 import { createSignal, createEffect } from "solid-js";
 import { getData } from "./api/getData";
-import styles from "./App.module.css";
 import scoreData from "./data-scores.json";
 import GameList from "./GameList";
 

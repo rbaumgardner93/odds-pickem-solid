@@ -10,12 +10,16 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "prettier-plugin-tailwindcss": "^0.1.13",
     "vite": "^3.0.9",
     "vite-plugin-solid": "^2.3.0"
   },
   "dependencies": {
+    "autoprefixer": "^10.4.12",
     "babel-preset-solid": "^1.5.6",
     "dayjs": "^1.11.5",
-    "solid-js": "^1.5.6"
+    "postcss": "^8.4.17",
+    "solid-js": "^1.5.6",
+    "tailwindcss": "^3.1.8"
   }
 }
