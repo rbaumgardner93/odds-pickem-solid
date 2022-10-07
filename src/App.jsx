@@ -1,7 +1,21 @@
 import { createSignal, createEffect } from "solid-js";
 import { getData } from "./api/getData";
-import scoreData from "./data-scores.json";
+import scoreData from "./score-data.json";
 import GameList from "./GameList";
+
+const PREVIOUS_SCORE_KEY = "PREVIOUS_SCORES";
+
+function saveScoreTotals( currentWeek, parsedScores, scores ) {
+	const data = {
+		...parsedScores,
+		[currentWeek]: scores
+	};
+
+	window.localStorage.setItem(
+		PREVIOUS_SCORE_KEY,
+		JSON.stringify( data )
+	)
+}
 
 function updateCheckboxState( currentWeek ) {
 	const currentData = window.localStorage.getItem( currentWeek );
@@ -28,20 +42,15 @@ function updateCheckboxState( currentWeek ) {
 	}
 }
 
-function updateScoreState( currentWeek, setScore ) {
+function updateScoreState( currentWeek, setScore, setTotalScore ) {
 	const currentData = window.localStorage.getItem( currentWeek );
-	const score = window.localStorage.getItem( "score" );
+	const previousScores = window.localStorage.getItem( PREVIOUS_SCORE_KEY );
 
-	let parsedScore;
-	if ( score ) {
-		parsedScore = JSON.parse( score );
-		setScore( parsedScore );
-	}
-
+	let scores;
 	if ( currentData ) {
 		const parsedData = JSON.parse( currentData );
 
-		const scores = scoreData.reduce((acc, curr) => {
+		scores = scoreData.reduce((acc, curr) => {
 			const foundGame = parsedData[ curr.id ];
 			if ( foundGame && curr.completed ) {
 				const winner = curr.scores[ 0 ].score > curr.scores[ 1 ].score ? {
@@ -69,34 +78,75 @@ function updateScoreState( currentWeek, setScore ) {
 		}, { jon: 0, chuck: 0 } )
 
 		setScore( scores );
-		window.localStorage.setItem(
-			"score",
-			JSON.stringify( scores )
-		);
+	}
+
+	let parsedScores, foundScores;
+	if ( previousScores ) {
+		parsedScores = JSON.parse( previousScores );
+		foundScores = parsedScores[ currentWeek ];
+	}
+
+	if ( foundScores ) {
+		const totalScore = Object.keys( parsedScores ).reduce( ( acc, curr ) => {
+			const currentWeek = parsedScores[ curr ];
+			if ( currentWeek.jon ) {
+				acc = {
+					...acc,
+					jon: acc.jon += currentWeek.jon
+				}
+			}
+
+			if ( currentWeek.chuck ) {
+				acc = {
+					...acc,
+					chuck: acc.chuck += currentWeek.chuck
+				}
+			}
+
+			return acc;
+		}, { jon: 0, chuck: 0 } )
+
+		setTotalScore( totalScore );
+		saveScoreTotals( currentWeek, parsedScores, scores );
+	} else {
+		saveScoreTotals( currentWeek, parsedScores, scores );
 	}
 }
 
 function App() {
 	const [ score, setScore ] = createSignal( {} );
+	const [ totalScore, setTotalScore ] = createSignal( {} );
 	const [ combinedData, setCombinedData ] = createSignal( getData() || [] );
 
 	createEffect(() => {
-		const currentWeek = combinedData()[ 0 ].currentWeek;
+		const firstItem = combinedData().find( item => item !== undefined );
 
-		updateCheckboxState(currentWeek);
-		updateScoreState( currentWeek, setScore );
+		if ( firstItem ) {
+			const currentWeek = firstItem.currentWeek;
+
+			updateCheckboxState(currentWeek);
+			updateScoreState( currentWeek, setScore, setTotalScore );
+		}
 	});
 
 	return (
-		<>
-			<h1>Jon and Chuck's Ultimate Pick'em Game</h1>
-			<div>
-				<h2>Scoreboard</h2>
+		<main className="p-4">
+			<h1 className="text-xl text-center pb-6 font-semibold">Jon and Chuck's Ultimate Pick'em</h1>
+			<h2 className="text-lg text-center pb-2">Scoreboard</h2>
+			<h3 className="text-center">Overall</h3>
+			<div className="flex justify-center gap-10 pb-4">
+				<p>Jon: { totalScore().jon }</p>
+				<p>Chuck: { totalScore().chuck }</p>
+			</div>
+			<h3 className="text-center">Current Week</h3>
+			<div className="flex justify-center gap-10 pb-8">
 				<p>Jon: { score().jon }</p>
 				<p>Chuck: { score().chuck }</p>
 			</div>
-			<GameList gameData={ combinedData() } />
-		</>
+			<section className="px-6">
+				<GameList gameData={ combinedData() } />
+			</section>
+		</main>
 	)
 }
 

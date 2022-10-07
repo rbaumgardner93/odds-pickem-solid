@@ -49,14 +49,19 @@ function GameList( { gameData } ) {
 	};
 
 	return gameData.map((game) => {
+		if ( !game ) {
+			return;
+		}
+
 		const home = game.home;
 		const away = game.away;
 
 		return (
-			<div key={game.id}>
-				<li id={game.id}>
-					<label>
+			<div key={game.id} className="pb-6">
+				<li id={game.id} className="list-none flex flex-col">
+					<label className="flex">
 						<input
+							className="mr-2"
 							type="checkbox"
 							onChange={ event =>
 								handleChecked( {
@@ -68,10 +73,16 @@ function GameList( { gameData } ) {
 								} ) }
 							disabled={ game.disabled }
 						/>
-					Home: { home.team } { home.spread } { home.score ?? "" }
+						<div className="flex-grow">
+							<div className="flex justify-between">
+								<span>{ home.team } {`(${home.spread})`}</span>
+								<span>{ home.score ?? "" }</span>
+							</div>
+						</div>
 					</label>
-					<label>
+					<label className="flex">
 						<input
+							className="mr-2"
 							type="checkbox"
 							onChange={ event =>
 								handleChecked( {
@@ -83,11 +94,16 @@ function GameList( { gameData } ) {
 							} ) }
 							disabled={ game.disabled }
 						/>
-						Away: {away.team} {away.spread} { away.score ?? "" }
+						<div className="flex-grow">
+							<div className="flex justify-between">
+								<span>{ away.team } { `(${away.spread})`}</span>
+								<span>{ away.score ?? "" }</span>
+							</div>
+						</div>
 					</label>
 				</li>
 			</div>
-		)
+		);
 	} )
 }
 
