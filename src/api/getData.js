@@ -3,12 +3,23 @@ import { getCurrentWeek } from "../utilities/getCurrentWeek";
 
 const apiKey = import.meta.env.VITE_API_KEY;
 const baseUrl = "https://api.the-odds-api.com/v4/sports/americanfootball_ncaaf/"
-const scoreUrl = `${ baseUrl }scores?apiKey=${ apiKey }&daysFrom=1`;
 const spreadUrl = `${ baseUrl }odds?apiKey=${ apiKey }&regions=us&markets=spreads&dateFormat=iso&oddsFormat=decimal&bookmakers=barstool`;
 const NOW = dayjs();
 
+function buildScoreUrl( dayOfWeek ) {
+	debugger;
+	let daysFrom = 1;
+	if ( dayOfWeek === 1 ) {
+		daysFrom = 2;
+	} else if ( dayOfWeek === 2 ) {
+		daysFrom = 3;
+	}
+
+	return `${ baseUrl }scores?apiKey=${ apiKey }&daysFrom=${ daysFrom }`;
+}
+
 async function getSpreadData() {
-	const currentWeek = getCurrentWeek( NOW );
+	const currentWeek = getCurrentWeek( NOW.subtract( 3, "day" ) );
 	const savedData = window.localStorage.getItem( "SPREAD_DATA" );
 
 	if ( savedData ) {
@@ -30,6 +41,7 @@ async function getSpreadData() {
 }
 
 async function getScoreData() {
+	const scoreUrl = buildScoreUrl( NOW.day() )
 	const response = await fetch(scoreUrl);
 	return response.json();
 }
@@ -38,7 +50,7 @@ export async function getData() {
 	const spreadData = await getSpreadData();
 	const scoreData = await getScoreData();
 
-	return spreadData.map( (game) => {
+	const mergedData = spreadData.map( (game) => {
 		const gameScore = scoreData.find( g => g.id === game.id );
 		const homeTeam = game.home_team;
 		const awayTeam = game.away_team;
@@ -93,4 +105,6 @@ export async function getData() {
 			}
 		}
 	} );
+
+	return { mergedData, scoreData };
 }

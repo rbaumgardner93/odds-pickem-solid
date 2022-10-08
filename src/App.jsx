@@ -1,5 +1,4 @@
 import { createSignal, createEffect } from "solid-js";
-import scoreData from "./score-data.json";
 import GameList from "./GameList";
 
 const PREVIOUS_SCORE_KEY = "PREVIOUS_SCORES";
@@ -45,7 +44,7 @@ function updateCheckboxState( currentWeek ) {
 	}
 }
 
-function updateScoreState( currentWeek, setScore, setTotalScore ) {
+function updateScoreState( currentWeek, setScore, setTotalScore, scoreData ) {
 	const currentData = window.localStorage.getItem( currentWeek );
 	const previousScores = window.localStorage.getItem( PREVIOUS_SCORE_KEY );
 
@@ -116,7 +115,7 @@ function updateScoreState( currentWeek, setScore, setTotalScore ) {
 	}
 }
 
-function App( { gameData } ) {
+function App( { gameData, scoreData } ) {
 	const [ score, setScore ] = createSignal( {} );
 	const [ totalScore, setTotalScore ] = createSignal( {} );
 
@@ -127,12 +126,12 @@ function App( { gameData } ) {
 			const currentWeek = firstItem.currentWeek;
 
 			updateCheckboxState(currentWeek);
-			updateScoreState( currentWeek, setScore, setTotalScore );
+			updateScoreState( currentWeek, setScore, setTotalScore, scoreData );
 		}
 	});
 
 	return (
-		<main className="p-4">
+		<main className="p-4 max-w-xl mx-auto">
 			<h1 className="text-xl text-center pb-6 font-semibold">Jon and Chuck's Ultimate Pick'em</h1>
 			<h2 className="text-lg text-center pb-2">Scoreboard</h2>
 			<h3 className="text-center">Overall</h3>

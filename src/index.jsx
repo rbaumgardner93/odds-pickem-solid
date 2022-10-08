@@ -5,6 +5,6 @@ import { getData } from "./api/getData";
 import './index.css';
 import App from './App';
 
-const gameData = await getData();
+const { mergedData, scoreData } = await getData();
 
-render(() => <App gameData={ gameData } />, document.getElementById('root'));
+render(() => <App gameData={ mergedData } scoreData={ scoreData } />, document.getElementById('root'));
