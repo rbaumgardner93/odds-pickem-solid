@@ -1,5 +1,4 @@
 import { createSignal, createEffect } from "solid-js";
-import { getData } from "./api/getData";
 import scoreData from "./score-data.json";
 import GameList from "./GameList";
 
@@ -25,6 +24,10 @@ function updateCheckboxState( currentWeek ) {
 
 		Object.keys(parsedData).map((id) => {
 			const game = document.getElementById(id);
+			if ( !game ) {
+				return;
+			}
+
 			const team = parsedData[id].teamName;
 			const firstLabel = game.querySelectorAll("label")[0];
 			const firstCheckbox = game.querySelectorAll("input")[0];
@@ -113,13 +116,12 @@ function updateScoreState( currentWeek, setScore, setTotalScore ) {
 	}
 }
 
-function App() {
+function App( { gameData } ) {
 	const [ score, setScore ] = createSignal( {} );
 	const [ totalScore, setTotalScore ] = createSignal( {} );
-	const [ combinedData, setCombinedData ] = createSignal( getData() || [] );
 
 	createEffect(() => {
-		const firstItem = combinedData().find( item => item !== undefined );
+		const firstItem = gameData.find( item => item !== undefined );
 
 		if ( firstItem ) {
 			const currentWeek = firstItem.currentWeek;
@@ -144,7 +146,7 @@ function App() {
 				<p>Chuck: { score().chuck }</p>
 			</div>
 			<section className="px-6">
-				<GameList gameData={ combinedData() } />
+				<GameList gameData={ gameData } />
 			</section>
 		</main>
 	)
