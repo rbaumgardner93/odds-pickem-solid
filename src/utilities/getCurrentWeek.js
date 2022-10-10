@@ -20,6 +20,10 @@ const SCHEDULE = {
 	week6: {
 		start: dayjs("2022-10-04"),
 		end: dayjs("2022-10-10")
+	},
+	week7: {
+		start: dayjs("2022-10-11"),
+		end: dayjs("2022-10-17")
 	}
 }
 export function getCurrentWeek( gameTime ) {
@@ -34,6 +38,8 @@ export function getCurrentWeek( gameTime ) {
 			return "WEEK_5";
 		case SCHEDULE.week6.start.isBefore( gameTime ) && SCHEDULE.week6.end.isAfter( gameTime ):
 			return "WEEK_6";
+		case SCHEDULE.week7.start.isBefore( gameTime ) && SCHEDULE.week7.end.isAfter( gameTime ):
+			return "WEEK_7";
 		default:
 			throw new Error( `Date ${ gameTime } is out of range` );
 	}

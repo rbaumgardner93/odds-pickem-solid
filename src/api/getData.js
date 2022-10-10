@@ -7,11 +7,10 @@ const spreadUrl = `${ baseUrl }odds?apiKey=${ apiKey }&regions=us&markets=spread
 const NOW = dayjs();
 
 function buildScoreUrl( dayOfWeek ) {
-	debugger;
 	let daysFrom = 1;
-	if ( dayOfWeek === 1 ) {
+	if ( dayOfWeek === 0 ) {
 		daysFrom = 2;
-	} else if ( dayOfWeek === 2 ) {
+	} else if ( dayOfWeek === 1 ) {
 		daysFrom = 3;
 	}
 
@@ -19,7 +18,7 @@ function buildScoreUrl( dayOfWeek ) {
 }
 
 async function getSpreadData() {
-	const currentWeek = getCurrentWeek( NOW.subtract( 3, "day" ) );
+	const currentWeek = getCurrentWeek( NOW.subtract( 2, "day" ) );
 	const savedData = window.localStorage.getItem( "SPREAD_DATA" );
 
 	if ( savedData ) {
@@ -52,6 +51,11 @@ export async function getData() {
 
 	const mergedData = spreadData.map( (game) => {
 		const gameScore = scoreData.find( g => g.id === game.id );
+
+		if ( !gameScore ) {
+			return;
+		}
+
 		const homeTeam = game.home_team;
 		const awayTeam = game.away_team;
 
