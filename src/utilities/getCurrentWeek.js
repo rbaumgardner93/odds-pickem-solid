@@ -1,4 +1,9 @@
 import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+
+dayjs.extend( isSameOrBefore );
+dayjs.extend( isSameOrAfter );
 
 const SCHEDULE = {
 	week2: {
@@ -26,19 +31,26 @@ const SCHEDULE = {
 		end: dayjs("2022-10-17")
 	}
 }
+
+function lookupWeek( week, gameTime ) {
+	return SCHEDULE[ week ].start.isSameOrBefore( gameTime, "day" ) &&
+		SCHEDULE[ week ].end.isSameOrAfter( gameTime, "day" );
+
+}
+
 export function getCurrentWeek( gameTime ) {
 	switch( true ) {
-		case SCHEDULE.week2.start.isBefore( gameTime ) && SCHEDULE.week2.end.isAfter( gameTime ):
+		case lookupWeek( "week2", gameTime ):
 			return "WEEK_2";
-		case SCHEDULE.week3.start.isBefore( gameTime ) && SCHEDULE.week3.end.isAfter( gameTime ):
+		case lookupWeek( "week3", gameTime ):
 			return "WEEK_3";
-		case SCHEDULE.week4.start.isBefore( gameTime ) && SCHEDULE.week4.end.isAfter( gameTime ):
+		case lookupWeek( "week4", gameTime ):
 			return "WEEK_4";
-		case SCHEDULE.week5.start.isBefore( gameTime ) && SCHEDULE.week5.end.isAfter( gameTime ):
+		case lookupWeek( "week5", gameTime ):
 			return "WEEK_5";
-		case SCHEDULE.week6.start.isBefore( gameTime ) && SCHEDULE.week6.end.isAfter( gameTime ):
+		case lookupWeek( "week6", gameTime ):
 			return "WEEK_6";
-		case SCHEDULE.week7.start.isBefore( gameTime ) && SCHEDULE.week7.end.isAfter( gameTime ):
+		case lookupWeek( "week7", gameTime ):
 			return "WEEK_7";
 		default:
 			throw new Error( `Date ${ gameTime } is out of range` );
