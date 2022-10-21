@@ -29,6 +29,18 @@ const SCHEDULE = {
 	week7: {
 		start: dayjs("2022-10-11"),
 		end: dayjs("2022-10-17")
+	},
+	week8: {
+		start: dayjs("2022-10-18"),
+		end: dayjs("2022-10-24")
+	},
+	week9: {
+		start: dayjs("2022-10-25"),
+		end: dayjs("2022-10-31")
+	},
+	week10: {
+		start: dayjs("2022-11-01"),
+		end: dayjs("2022-11-07")
 	}
 }
 
@@ -52,6 +64,12 @@ export function getCurrentWeek( gameTime ) {
 			return "WEEK_6";
 		case lookupWeek( "week7", gameTime ):
 			return "WEEK_7";
+		case lookupWeek( "week8", gameTime ):
+			return "WEEK_8";
+		case lookupWeek( "week9", gameTime ):
+			return "WEEK_9";
+		case lookupWeek( "week10", gameTime ):
+			return "WEEK_10";
 		default:
 			throw new Error( `Date ${ gameTime } is out of range` );
 	}

@@ -21,10 +21,13 @@ async function getSpreadData() {
 	const currentWeek = getCurrentWeek( NOW.subtract( 2, "day" ) );
 	const savedData = window.localStorage.getItem( "SPREAD_DATA" );
 
+	let foundWeek;
 	if ( savedData ) {
 		const parsedData = JSON.parse( savedData );
-		const foundWeek = parsedData[ currentWeek ];
+		foundWeek = parsedData[ currentWeek ];
+	}
 
+	if ( foundWeek ) {
 		return foundWeek;
 	} else {
 		const response = await fetch(spreadUrl);
